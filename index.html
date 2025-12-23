@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESS TERMINAL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        /* Matrix Rain Background */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.15;
+        }
+
+        /* CRT Screen Effect */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .crt-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+        }
+
+        .crt-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* Terminal Container */
+        .terminal {
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 10, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            padding: 30px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 0, 0.3),
+                0 0 40px rgba(0, 255, 0, 0.2),
+                inset 0 0 60px rgba(0, 255, 0, 0.1);
+        }
+
+        .terminal-header {
+            color: #00ff00;
+            font-size: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .terminal-content {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .line {
+            margin-bottom: 10px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .prompt {
+            color: #00ff00;
+        }
+
+        /* Password Input Area */
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .input-line .prompt {
+            margin-right: 10px;
+        }
+
+        #password-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            width: 300px;
+            text-shadow: 0 0 5px #00ff00;
+            caret-color: transparent;
+        }
+
+        /* Blinking Cursor */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Hidden password display */
+        .password-display {
+            color: #00ff00;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        /* Response Messages */
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-left: 3px solid;
+        }
+
+        .response.error {
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            animation: glitch 0.3s ease-in-out;
+        }
+
+        .response.success {
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            animation: successGlow 2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+        }
+
+        @keyframes successGlow {
+            0%, 100% { text-shadow: 0 0 10px #00ff00; }
+            50% { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+
+        /* Skull ASCII Art */
+        .ascii-art {
+            font-size: 8px;
+            line-height: 1;
+            white-space: pre;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            margin-bottom: 20px;
+        }
+
+        /* Flicker effect */
+        .flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Success message box */
+        .secret-message {
+            background: rgba(0, 50, 0, 0.8);
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .secret-message h2 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px #00ff00;
+        }
+
+        .secret-message p {
+            color: #00ff00;
+            line-height: 1.8;
+        }
+
+        /* Hide elements */
+        .hidden {
+            display: none;
+        }
+
+        /* Loading dots */
+        .loading {
+            color: #00ff00;
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix Rain Canvas -->
+    <canvas class="matrix-bg" id="matrix"></canvas>
+    
+    <!-- CRT Effect Overlay -->
+    <div class="crt-overlay"></div>
+
+    <!-- Terminal -->
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="flicker">█</span> SECURE TERMINAL v2.0.25 - CLASSIFIED ACCESS
+        </div>
+
+        <pre class="ascii-art">
+    ██╗  ██╗███╗   ███╗ █████╗ ███████╗██████╗ ███████╗
+    ╚██╗██╔╝████╗ ████║██╔══██╗██╔════╝╚════██╗██╔════╝
+     ╚███╔╝ ██╔████╔██║███████║███████╗ █████╔╝███████╗
+     ██╔██╗ ██║╚██╔╝██║██╔══██║╚════██║██╔═══╝ ╚════██║
+    ██╔╝ ██╗██║ ╚═╝ ██║██║  ██║███████║███████╗███████║
+    ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝
+        </pre>
+
+        <div class="terminal-content">
+            <div class="line">[SYSTEM] Establishing secure connection...</div>
+            <div class="line">[SYSTEM] Connection established.</div>
+            <div class="line">[SYSTEM] Authentication required.</div>
+            <div class="line">&nbsp;</div>
+            <div class="line">Enter access code to proceed:</div>
+            
+            <div class="input-line" id="input-area">
+                <span class="prompt">root@secure:~$</span>
+                <span class="password-display" id="password-display"></span>
+                <span class="cursor" id="cursor"></span>
+                <input type="password" id="password-input" autofocus autocomplete="off">
+            </div>
+
+            <div id="response-area"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIGURATION ============
+        const SECRET_PASSWORD = "8211719213141854";
+        const SECRET_MESSAGE = `
+            <h2>🎄 ACCESS GRANTED 🎄</h2>
+            <p>Willst du die Geschenke noch heute entdecken,</p>
+            <p>begib dich auf Reisen, lass dich nicht erschrecken.</p>
+            <p>Folge den Hinweisen, denn du weißt genau,</p>
+            <p>nicht lila, nicht klein, sondern groß und dunkelblau.</p>
+        `;
+        // =======================================
+
+        const passwordInput = document.getElementById('password-input');
+        const passwordDisplay = document.getElementById('password-display');
+        const responseArea = document.getElementById('response-area');
+        const inputArea = document.getElementById('input-area');
+        const cursor = document.getElementById('cursor');
+
+        // Focus input on click anywhere
+        document.addEventListener('click', () => {
+            passwordInput.focus();
+        });
+
+        // Update display as user types
+        passwordInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            passwordDisplay.textContent = '*'.repeat(value.length);
+        });
+
+        // Handle Enter key
+        passwordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkPassword();
+            }
+        });
+
+        function checkPassword() {
+            const enteredPassword = passwordInput.value;
+            
+            // Show loading
+            responseArea.innerHTML = '<div class="line loading">[SYSTEM] Verifying credentials</div>';
+            
+            setTimeout(() => {
+                if (enteredPassword === SECRET_PASSWORD) {
+                    // Success
+                    inputArea.classList.add('hidden');
+                    responseArea.innerHTML = `
+                        <div class="line">[SYSTEM] Access code verified.</div>
+                        <div class="line">[SYSTEM] Decrypting message...</div>
+                        <div class="response success">
+                            <div class="secret-message">
+                                ${SECRET_MESSAGE}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Failure
+                    responseArea.innerHTML = `
+                        <div class="response error">
+                            <div class="line">[ERROR] INCORRECT CODE</div>
+                            <div class="line">[SYSTEM] Access denied. This incident will be reported.</div>
+                        </div>
+                    `;
+                    // Clear input and let user try again
+                    passwordInput.value = '';
+                    passwordDisplay.textContent = '';
+                    
+                    // Shake effect on terminal
+                    document.querySelector('.terminal').style.animation = 'glitch 0.5s ease-in-out';
+                    setTimeout(() => {
+                        document.querySelector('.terminal').style.animation = '';
+                    }, 500);
+                }
+            }, 1500);
+        }
+
+        // ============ MATRIX RAIN EFFECT ============
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const charArray = chars.split('');
+
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * canvas.height / fontSize;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff00';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Initial focus
+        passwordInput.focus();
+    </script>
+</body>
+</html>
